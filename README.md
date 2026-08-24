@@ -245,9 +245,11 @@ Supported operations:
 
 ```bash
 ./switch-awx.sh status
-./switch-awx.sh old
-./switch-awx.sh new
+./switch-awx.sh first
+./switch-awx.sh second
 ```
+
+`first` selects the Kubernetes 1.30 AWX cluster and `second` selects the Kubernetes 1.34 AWX cluster.
 
 The script performs several operations during a switch:
 
@@ -331,7 +333,7 @@ monitoring/zabbix/zabbix-awx-130-status.sh
 monitoring/zabbix/zabbix-awx-134-status.sh
 ```
 
-Each script queries the Kubernetes API and validates the presence of critical AWX components such as:
+Each script queries the Kubernetes API and validates the presence and readiness of critical AWX components such as:
 
 - AWX Web
 - AWX Task
@@ -389,7 +391,7 @@ The backup process can temporarily switch AWX environments in order to back up b
 
 The initially active cluster is restored at the end of the operation.
 
-Archives are compressed and automatically rotated according to the configured retention policy.
+Archives are compressed as `awx-full-backup-<timestamp>.tar.gz` and automatically rotated according to the configured retention policy.
 
 ---
 
@@ -421,7 +423,7 @@ Example scheduling strategy:
 
 ### `backups/backup-terraform.sh`
 
-Archives the Terraform workspace while excluding unnecessary or sensitive runtime content.
+Archives the Terraform workspace while excluding unnecessary runtime content.
 
 Excluded examples include:
 
@@ -432,6 +434,8 @@ node_modules/
 logs
 temporary files
 ```
+
+Because disaster-recovery archives may intentionally include Terraform state or generated Kubernetes credentials, backup storage itself must be treated as sensitive data.
 
 Old archives are automatically deleted according to the retention policy.
 
@@ -768,8 +772,7 @@ The scripts intentionally expose the implementation details so they can be studi
 Planned improvements for the lab include:
 
 - [ ] Jenkins pipelines stored as code
-- [ ] Automated ShellCheck validation
-- [ ] CI validation for every Bash script
+- [x] ShellCheck validation on modified Bash scripts in pull requests
 - [ ] Ansible-based deployment
 - [ ] Terraform modules
 - [ ] Centralized logging
@@ -780,7 +783,7 @@ Planned improvements for the lab include:
 - [ ] Improved secrets management
 - [ ] Automated integration tests
 - [ ] Containerized application deployment
-- [ ] CI/CD deployment into the lab
+- [ ] Controlled CI/CD deployment into the lab after manual approval
 - [ ] Infrastructure architecture documentation
 
 ---
