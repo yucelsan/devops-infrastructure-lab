@@ -1,0 +1,57 @@
+name: ShellCheck
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '**/*.sh'
+      - '.github/workflows/shellcheck.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  shellcheck:
+    name: Validate changed Bash scripts
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout pull request branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+
+      - name: Detect changed Bash scripts
+        id: changed
+        shell: bash
+        run: |
+          BASE_SHA="${{ github.event.pull_request.base.sha }}"
+          HEAD_SHA="${{ github.event.pull_request.head.sha }}"
+
+          mapfile -t scripts < <(
+            git diff --name-only --diff-filter=ACMR "$BASE_SHA" "$HEAD_SHA" -- '*.sh'
+          )
+
+          if (( ${#scripts[@]} == 0 )); then
+            echo "No changed Bash scripts to validate."
+            echo "has_scripts=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo "Changed Bash scripts:"
+          printf '  - %s\n' "${scripts[@]}"
+
+          printf '%s\0' "${scripts[@]}" > /tmp/changed-bash-files
+          echo "has_scripts=true" >> "$GITHUB_OUTPUT"
+
+      - name: Run ShellCheck on changed scripts
+        if: steps.changed.outputs.has_scripts == 'true'
+        shell: bash
+        run: |
+          while IFS= read -r -d '' script; do
+            echo "::group::ShellCheck: $script"
+            shellcheck "$script"
+            echo "::endgroup::"
+          done < /tmp/changed-bash-files
