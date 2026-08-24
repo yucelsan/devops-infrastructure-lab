@@ -2446,6 +2446,37 @@ check_backup()
             fi
             ;;
 
+        tar)
+
+            if command_exists tar; then
+
+                if tar \
+                    -tzf \
+                    "$LAST_FILE" \
+                    >/dev/null 2>&1
+                then
+
+                    print_ok \
+                        "BACKUPS" \
+                        "$NAME : archive TAR.GZ valide"
+
+                else
+
+                    print_critical \
+                        "BACKUPS" \
+                        "$NAME : archive TAR.GZ corrompue"
+
+                fi
+
+            else
+
+                print_warning \
+                    "BACKUPS" \
+                    "$NAME : commande tar absente"
+
+            fi
+            ;;
+
     esac
 }
 
@@ -2457,10 +2488,10 @@ check_backup()
 check_backup \
     "AWX Full" \
     "$AWX_FULL_BACKUP_DIR" \
-    "*.sql" \
+    "awx-full-backup-*.tar.gz" \
     192 \
     240 \
-    "file"
+    "tar"
 
 
 #
