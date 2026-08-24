@@ -1,0 +1,32 @@
+# Real configuration
+.env
+.env.*
+!.env.example
+
+# Generated application configuration
+workflow/inc/Config.php
+
+# TLS
+*.key
+*.pem
+*.crt
+*.p12
+*.pfx
+
+# Logs
+*.log
+
+# Database exports
+*.sql
+*.dump
+!database/init.example.sql
+
+# Backups
+*.zip
+*.tar
+*.tar.gz
+
+# Temporary files
+*.tmp
+*~
+

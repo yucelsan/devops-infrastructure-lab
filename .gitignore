@@ -1,0 +1,48 @@
+# Backups
+
+*.dump
+*.sql
+*.tar
+*.tar.gz
+*.zip
+
+# Kubernetes / credentials
+
+*.kubeconfig
+kubeconfig*
+.kube/
+*secret*.yaml
+*secrets*.yaml
+
+# Terraform
+
+*.tfstate
+*.tfstate.*
+.terraform/
+
+# Environment / credentials
+
+.env
+.env.*
+*.key
+*.pem
+*.p12
+*.pfx
+
+# Logs
+
+*.log
+
+# Workflow
+
+!workflow/database/init.example.sql
+!workflow/.env.example
+
+# OS / IDE
+
+.DS_Store
+Thumbs.db
+
+.vscode/
+.idea/
+
