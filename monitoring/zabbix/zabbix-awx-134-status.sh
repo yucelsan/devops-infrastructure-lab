@@ -9,7 +9,7 @@
 #      Checks whether the AWX application is operational on the
 #      Kubernetes v1.34 cluster.
 #
-#      The script verifies that the main AWX pods are in Running state:
+#      The script verifies that the main AWX pods are Running and Ready:
 #
 #          - awx-web
 #          - awx-task
@@ -29,20 +29,15 @@
 set -u
 
 export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
-
 export KUBECONFIG="${KUBECONFIG:-/var/lib/zabbix/.kube/config}"
-
 
 # ==============================================================================
 # CONFIGURATION
 # ==============================================================================
 
 KUBE_CMD="${KUBE_CMD:-/usr/local/bin/kube-latest}"
-
 AWX_CONTEXT="${AWX_CONTEXT:-kind-awx-134}"
-
 AWX_NAMESPACE="${AWX_NAMESPACE:-awx}"
-
 
 # ==============================================================================
 # PRECHECKS
@@ -50,15 +45,13 @@ AWX_NAMESPACE="${AWX_NAMESPACE:-awx}"
 
 if [[ ! -x "$KUBE_CMD" ]]; then
     echo 0
-    exit 1
+    exit 0
 fi
-
 
 if [[ ! -r "$KUBECONFIG" ]]; then
     echo 0
-    exit 1
+    exit 0
 fi
-
 
 # ==============================================================================
 # POD STATUS
@@ -74,23 +67,37 @@ PODS="$(
         || true
 )"
 
+# ==============================================================================
+# HEALTH CHECK HELPERS
+# ==============================================================================
+
+pod_ready()
+{
+    local PATTERN="$1"
+
+    awk -v pattern="$PATTERN" '
+        $1 ~ pattern && $3 == "Running" {
+            split($2, ready, "/")
+            if (ready[1] == ready[2] && ready[2] > 0) {
+                found = 1
+            }
+        }
+        END { exit(found ? 0 : 1) }
+    ' <<< "$PODS"
+}
 
 # ==============================================================================
 # HEALTH CHECK
 # ==============================================================================
 
-if echo "$PODS" | grep -qE 'awx-web.*Running' \
-   && echo "$PODS" | grep -qE 'awx-task.*Running' \
-   && echo "$PODS" | grep -qE 'awx-operator.*Running'
+if pod_ready '^awx-web' \
+   && pod_ready '^awx-task' \
+   && pod_ready '^awx-operator'
 then
-
     echo 1
-    exit 0
-
 else
-
     echo 0
-    exit 1
-
 fi
 
+# The metric was successfully produced. Zabbix consumes stdout as 0/1.
+exit 0
