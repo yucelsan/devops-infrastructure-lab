@@ -3115,10 +3115,12 @@ fi
 
 print_title "ERREURS SYSTEME RECENTES"
 
+SYSTEM_JOURNAL_SINCE="${SYSTEM_JOURNAL_SINCE:-30 minutes ago}"
+
 SYSTEM_ERRORS="$(
     journalctl \
         -p err..alert \
-        --since "$JOURNAL_SINCE" \
+        --since "$SYSTEM_JOURNAL_SINCE" \
         --no-pager \
         2>/dev/null \
     | grep -vE \
